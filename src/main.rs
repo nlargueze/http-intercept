@@ -43,49 +43,8 @@ async fn real_main() {
 
 /// Handler
 async fn handler(req: Request<Body>) -> Result<Response<Body>, Infallible> {
-    println!(
-        "{} {} {}",
-        req.method().to_string().blue(),
-        req.uri().to_string().blue(),
-        format!("{:?}", req.version()).blue()
-    );
-
-    for (k, v) in req.headers() {
-        let v_str = match v.to_str() {
-            Ok(v) => v,
-            Err(err) => {
-                println!(
-                    "{}",
-                    format!("weird header {} not ASCII: {:?} | {:?}", k, v, err).red()
-                );
-                continue;
-            }
-        };
-        println!("{}: {}", k.to_string().cyan(), v_str);
-    }
-
-    let body = match hyper::body::to_bytes(req.into_body()).await {
-        Ok(b) => b,
-        Err(err) => {
-            println!(
-                "{}",
-                format!("cannot concatenate request body: {err:?}").red()
-            );
-            Bytes::new()
-        }
-    };
-    match std::str::from_utf8(&body) {
-        Ok(s) => {
-            println!();
-            println!("{s}");
-        }
-        Err(err) => {
-            println!(
-                "{}",
-                format!("cannot concatenate request body: {err:?}").red()
-            );
-        }
-    }
+    let req_str = convert_req_to_str(req).await;
+    println!("{req_str}");
 
     let res = Response::builder()
         .status(StatusCode::OK)
@@ -93,4 +52,62 @@ async fn handler(req: Request<Body>) -> Result<Response<Body>, Infallible> {
         .unwrap();
 
     Ok(res)
+}
+
+/// Format a request
+async fn convert_req_to_str(req: Request<Body>) -> String {
+    let head_str = format!(
+        "{} {} {}",
+        req.method().to_string().blue(),
+        req.uri().to_string().blue(),
+        format!("{:?}", req.version()).blue()
+    );
+
+    let mut headers_str = String::new();
+    for (k, v) in req.headers() {
+        if !headers_str.is_empty() {
+            headers_str.push('\n');
+        }
+        match v.to_str() {
+            Ok(v) => {
+                headers_str.push_str(format!("{}: {}", k.to_string().cyan(), v).as_str());
+            }
+            Err(err) => {
+                headers_str.push_str(
+                    format!(
+                        "{}",
+                        format!("weird header {} not ASCII: {:?} | {:?}", k, v, err).red()
+                    )
+                    .as_str(),
+                );
+                continue;
+            }
+        }
+    }
+
+    let mut body_str = String::new();
+    let body = match hyper::body::to_bytes(req.into_body()).await {
+        Ok(b) => b,
+        Err(err) => {
+            body_str.push_str(
+                format!(
+                    "{}",
+                    format!("cannot concatenate request body: {err:?}").red()
+                )
+                .as_str(),
+            );
+            Bytes::new()
+        }
+    };
+
+    match std::str::from_utf8(&body) {
+        Ok(s) => {
+            body_str.push_str(s);
+        }
+        Err(err) => {
+            body_str.push_str(format!("{}", format!("not UTF-8: {err:?}").red()).as_str());
+        }
+    }
+
+    format!("{head_str}\n{headers_str}\n\n{body_str}")
 }
