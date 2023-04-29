@@ -18,6 +18,7 @@ async fn main() {
 /// Simple program to greet a person
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
+// TODO: add color to output (cf. https://github.com/clap-rs/clap/issues/4132)
 struct Args {
     /// Port
     #[arg(short, long, default_value("8080"))]
