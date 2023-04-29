@@ -295,6 +295,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "http-intercept"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "colored",
+ "hyper",
+ "tokio",
+]
+
+[[package]]
 name = "httparse"
 version = "1.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -338,16 +348,6 @@ checksum = "bd070e393353796e801d209ad339e89596eb4c8d430d18ede6a1cced8fafbd99"
 dependencies = [
  "autocfg",
  "hashbrown",
-]
-
-[[package]]
-name = "intercept"
-version = "0.1.0"
-dependencies = [
- "clap",
- "colored",
- "hyper",
- "tokio",
 ]
 
 [[package]]
